@@ -1,0 +1,424 @@
+{% extends 'core/base.html' %}
+{% load field_filters %}
+
+{% block title %}{{ document.name }} - Document Details{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h2">
+                    <i class="bi bi-file-earmark-text"></i>
+                    {{ document.name }}
+                </h1>
+                <p class="text-muted mb-0">
+                    Uploaded {{ document.uploaded_at|timesince }} ago
+                </p>
+            </div>
+            <div>
+                <a href="{% url 'document_list' %}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i>
+                    Back to List
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Document Information -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-info-circle"></i>
+                    Document Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-4">Name:</dt>
+                    <dd class="col-sm-8">{{ document.name }}</dd>
+                    
+                    <dt class="col-sm-4">Type:</dt>
+                    <dd class="col-sm-8">
+                        <span class="badge bg-info">{{ document.get_document_type_display }}</span>
+                    </dd>
+                    
+                    <dt class="col-sm-4">Status:</dt>
+                    <dd class="col-sm-8">
+                        {% if document.status == 'completed' %}
+                            <span class="badge bg-success">
+                                <i class="bi bi-check-circle"></i> Completed
+                            </span>
+                        {% elif document.status == 'processing' %}
+                            <span class="badge bg-warning">
+                                <i class="bi bi-gear-fill"></i> Processing
+                            </span>
+                        {% elif document.status == 'error' %}
+                            <span class="badge bg-danger">
+                                <i class="bi bi-exclamation-triangle"></i> Error
+                            </span>
+                        {% else %}
+                            <span class="badge bg-secondary">
+                                <i class="bi bi-clock"></i> Uploaded
+                            </span>
+                        {% endif %}
+                    </dd>
+                    
+                    <dt class="col-sm-4">File Size:</dt>
+                    <dd class="col-sm-8">{{ document.file_size|filesizeformat }}</dd>
+                    
+                    <dt class="col-sm-4">MIME Type:</dt>
+                    <dd class="col-sm-8">{{ document.mime_type|default:"Unknown" }}</dd>
+                    
+                    <dt class="col-sm-4">Uploaded:</dt>
+                    <dd class="col-sm-8">{{ document.uploaded_at|date:"M d, Y H:i" }}</dd>
+                    
+                    {% if document.processing_time %}
+                    <dt class="col-sm-4">Processing Time:</dt>
+                    <dd class="col-sm-8">{{ document.processing_time|floatformat:2 }}s</dd>
+                    {% endif %}
+                </dl>
+                
+                {% if document.error_message %}
+                <div class="alert alert-danger" role="alert">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <strong>Error:</strong> {{ document.error_message }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-gear"></i>
+                    Actions
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'download_original' document.id %}" class="btn btn-outline-primary">
+                        <i class="bi bi-download"></i>
+                        Download Original
+                    </a>
+                    
+                    {% if extracted_fields %}
+                        <a href="{% url 'review_fields' document.id %}" class="btn btn-primary">
+                            <i class="bi bi-pencil-square"></i>
+                            Review Fields
+                        </a>
+                        
+                        <a href="{% url 'export_fields' document.id %}" class="btn btn-outline-success">
+                            <i class="bi bi-file-earmark-arrow-down"></i>
+                            Export JSON (Fields)
+                        </a>
+                    {% endif %}
+
+                    <a href="{% url 'export_ocr_json' document.id %}" class="btn btn-outline-success">
+                        <i class="bi bi-filetype-json"></i>
+                        Export JSON (OCR)
+                    </a>
+                    
+                    {% if document.status == 'error' %}
+                        <button class="btn btn-warning" onclick="reprocessDocument('{{ document.id }}')">
+                            <i class="bi bi-arrow-clockwise"></i>
+                            Reprocess
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Processing Logs -->
+        {% if logs %}
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-list-ul"></i>
+                    Processing Logs
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="timeline">
+                    {% for log in logs %}
+                    <div class="timeline-item mb-3">
+                        <div class="d-flex">
+                            <div class="flex-shrink-0">
+                                {% if log.level == 'error' %}
+                                    <i class="bi bi-exclamation-triangle text-danger"></i>
+                                {% elif log.level == 'warning' %}
+                                    <i class="bi bi-exclamation-circle text-warning"></i>
+                                {% else %}
+                                    <i class="bi bi-info-circle text-info"></i>
+                                {% endif %}
+                            </div>
+                            <div class="flex-grow-1 ms-2">
+                                <div class="small text-muted">{{ log.created_at|date:"M d, H:i" }}</div>
+                                <div class="fw-bold">{{ log.step|title }}</div>
+                                <div class="small">{{ log.message }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Extracted Fields -->
+    <div class="col-lg-8">
+        {% if extracted_fields %}
+            <div class="mb-4">
+                <h5 class="text-success">
+                    <i class="bi bi-check-circle"></i>
+                    Extracted Fields ({{ extracted_fields.get_field_count }} total)
+                </h5>
+                
+                <!-- Standard Fields Preview -->
+                <div class="row">
+                    {% if extracted_fields.full_name %}
+                        <div class="col-md-6 mb-2">
+                            <strong>Name:</strong> {{ extracted_fields.full_name }}
+                        </div>
+                    {% endif %}
+                    {% if extracted_fields.email %}
+                        <div class="col-md-6 mb-2">
+                            <strong>Email:</strong> {{ extracted_fields.email }}
+                        </div>
+                    {% endif %}
+                    {% if extracted_fields.phone_number %}
+                        <div class="col-md-6 mb-2">
+                            <strong>Phone:</strong> {{ extracted_fields.phone_number }}
+                        </div>
+                    {% endif %}
+                    {% if extracted_fields.pan_number %}
+                        <div class="col-md-6 mb-2">
+                            <strong>PAN:</strong> {{ extracted_fields.pan_number }}
+                        </div>
+                    {% endif %}
+                    {% if extracted_fields.date_of_birth %}
+                        <div class="col-md-6 mb-2">
+                            <strong>Date of Birth:</strong> {{ extracted_fields.date_of_birth }}
+                        </div>
+                    {% endif %}
+                    {% if extracted_fields.bank_name %}
+                        <div class="col-md-6 mb-2">
+                            <strong>Bank:</strong> {{ extracted_fields.bank_name }}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Additional Fields Preview -->
+                {% if extracted_fields.get_additional_fields %}
+                    <div class="mt-3">
+                        <h6 class="text-info">
+                            <i class="bi bi-plus-circle"></i>
+                            Additional Fields ({{ extracted_fields.get_additional_fields|length }})
+                        </h6>
+                        <div class="row">
+                            {% for field_name, field_value in extracted_fields.get_additional_fields.items %}
+                                {% if forloop.counter <= 6 %}
+                                    <div class="col-md-6 mb-1">
+                                        <small>
+                                            <strong>{{ field_name|format_field_name }}:</strong> 
+                                            {{ field_value|truncatechars:30 }}
+                                        </small>
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                            {% if extracted_fields.get_additional_fields|safe_length > 6 %}
+                                <div class="col-12">
+                                    <small class="text-muted">
+                                        ...and {{ extracted_fields.get_additional_fields|safe_length|add:"-6" }} more fields
+                                    </small>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+                
+                <div class="mt-3">
+                    {% if extracted_fields.is_verified %}
+                        <span class="badge bg-success">
+                            <i class="bi bi-shield-check"></i>
+                            Verified
+                            {% if extracted_fields.verified_at %}
+                                on {{ extracted_fields.verified_at|date:"M d, Y H:i" }}
+                            {% endif %}
+                        </span>
+                    {% else %}
+                        <span class="badge bg-warning">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            Needs Review
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i>
+                No fields have been extracted yet. The document may still be processing.
+            </div>
+        {% endif %}
+
+        <!-- Raw Text (if available) -->
+        {% if document.raw_text %}
+        <div class="card mt-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-file-earmark-text"></i>
+                    Extracted Text (OCR Output)
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="bg-light p-3 rounded" style="max-height: 300px; overflow-y: auto;">
+                    <pre class="mb-0 small">{{ document.raw_text }}</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- OCR JSON Preview with Copy -->
+        <div class="card mt-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-braces"></i>
+                    OCR JSON (copy-ready)
+                </h6>
+                <div class="d-flex gap-2">
+                    <button id="copyOcrJsonBtn" class="btn btn-sm btn-primary">
+                        <i class="bi bi-clipboard"></i>
+                        Copy JSON
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="bg-light p-3 rounded" style="max-height: 300px; overflow-y: auto;">
+                    <pre id="ocrJsonPre" class="mb-0 small"></pre>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function reprocessDocument(documentId) {
+    if (confirm('Are you sure you want to reprocess this document? This will overwrite any existing extracted data.')) {
+        fetch('/documents/' + documentId + '/reprocess/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Document reprocessing started successfully!');
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while reprocessing the document.');
+        });
+    }
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Auto-refresh status if document is processing
+var documentStatus = '{{ document.status }}';
+var documentId = '{{ document.id }}';
+
+if (documentStatus === 'processing') {
+    setInterval(function() {
+        fetch('/api/documents/' + documentId + '/status/')
+            .then(response => response.json())
+            .then(data => {
+                if (data.status !== 'processing') {
+                    location.reload();
+                }
+            })
+            .catch(error => console.error('Error checking status:', error));
+    }, 5000);
+}
+
+// Build OCR JSON preview and copy handler
+(function() {
+    var rawText = `{{ document.raw_text|escapejs }}`;
+    if (!rawText) return;
+
+    function tryParseCandidates(text) {
+        const candidates = [];
+        // fenced
+        const fence = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+        if (fence && fence[1]) candidates.push(fence[1]);
+        // object
+        const obj = text.match(/\{[\s\S]*\}/);
+        if (obj && obj[0]) candidates.push(obj[0]);
+        // array
+        const arr = text.match(/\[[\s\S]*\]/);
+        if (arr && arr[0]) candidates.push(arr[0]);
+        // raw
+        candidates.push(text);
+        const normalize = (s) => s.replace(/“|”/g,'"').replace(/‘|’/g,"'");
+        for (const c of candidates) {
+            try {
+                return JSON.parse(normalize(c));
+            } catch(e) { /* continue */ }
+        }
+        return null;
+    }
+
+    var payload = tryParseCandidates(rawText);
+    if (payload == null) {
+        payload = { text: rawText };
+    }
+    var pretty = JSON.stringify(payload, null, 2);
+    var pre = document.getElementById('ocrJsonPre');
+    if (pre) pre.textContent = pretty;
+
+    var copyBtn = document.getElementById('copyOcrJsonBtn');
+    if (copyBtn) {
+        copyBtn.addEventListener('click', async function() {
+            try {
+                await navigator.clipboard.writeText(pretty);
+                copyBtn.classList.remove('btn-primary');
+                copyBtn.classList.add('btn-success');
+                copyBtn.innerHTML = '<i class="bi bi-check2"></i> Copied';
+                setTimeout(() => {
+                    copyBtn.classList.remove('btn-success');
+                    copyBtn.classList.add('btn-primary');
+                    copyBtn.innerHTML = '<i class="bi bi-clipboard"></i> Copy JSON';
+                }, 1500);
+            } catch (e) {
+                alert('Failed to copy: ' + e);
+            }
+        });
+    }
+})();
+</script>
+{% endblock %} 

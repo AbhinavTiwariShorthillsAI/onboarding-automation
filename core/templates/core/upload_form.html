@@ -1,0 +1,276 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Upload Document - Onboarding Automation{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">
+                    <i class="bi bi-cloud-upload"></i>
+                    Upload Onboarding Document
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data" id="uploadForm">
+                    {% csrf_token %}
+                    
+                    <!-- File Upload Area -->
+                    <div class="mb-4">
+                        <label for="{{ form.file.id_for_label }}" class="form-label">
+                            Document File <span class="text-danger">*</span>
+                        </label>
+                        <div class="file-upload-area" id="fileUploadArea">
+                            {{ form.file }}
+                            <div class="upload-content">
+                                <i class="bi bi-cloud-upload" style="font-size: 3rem; color: #6c757d;"></i>
+                                <h5 class="mt-3 mb-2">Drag and drop your file here</h5>
+                                <p class="text-muted mb-3">or click to browse</p>
+                                <div class="file-info text-muted"></div>
+                            </div>
+                        </div>
+                        {% if form.file.help_text %}
+                            <div class="form-text">{{ form.file.help_text }}</div>
+                        {% endif %}
+                        {% if form.file.errors %}
+                            <div class="text-danger">
+                                {% for error in form.file.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Document Name -->
+                    <div class="mb-3">
+                        <label for="{{ form.name.id_for_label }}" class="form-label">
+                            Document Name
+                        </label>
+                        {{ form.name }}
+                        {% if form.name.help_text %}
+                            <div class="form-text">{{ form.name.help_text }}</div>
+                        {% endif %}
+                        {% if form.name.errors %}
+                            <div class="text-danger">
+                                {% for error in form.name.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Document Type -->
+                    <div class="mb-4">
+                        <label for="{{ form.document_type.id_for_label }}" class="form-label">
+                            Document Type <span class="text-danger">*</span>
+                        </label>
+                        {{ form.document_type }}
+                        {% if form.document_type.help_text %}
+                            <div class="form-text">{{ form.document_type.help_text }}</div>
+                        {% endif %}
+                        {% if form.document_type.errors %}
+                            <div class="text-danger">
+                                {% for error in form.document_type.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Submit Buttons -->
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'home' %}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i>
+                            Back to Dashboard
+                        </a>
+                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                            <span class="upload-text">
+                                <i class="bi bi-cloud-upload"></i>
+                                Upload & Process
+                            </span>
+                            <span class="uploading-text d-none">
+                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                Uploading...
+                            </span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Information Card -->
+        <div class="card mt-4">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="bi bi-info-circle"></i>
+                    Upload Guidelines
+                </h6>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-primary">Supported Formats</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="bi bi-file-earmark-pdf text-danger"></i> PDF documents</li>
+                            <li><i class="bi bi-file-earmark-image text-info"></i> JPEG images</li>
+                            <li><i class="bi bi-file-earmark-image text-info"></i> PNG images</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-primary">Processing Information</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="bi bi-robot text-success"></i> AI-powered OCR with Google Gemini Pro</li>
+                            <li><i class="bi bi-search text-warning"></i> Comprehensive field extraction</li>
+                            <li><i class="bi bi-plus-circle text-info"></i> Dynamic field discovery</li>
+                            <li><i class="bi bi-pencil text-info"></i> Manual review and editing</li>
+                            <li><i class="bi bi-download text-secondary"></i> JSON export of all fields</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info mt-3" role="alert">
+                    <i class="bi bi-lightbulb"></i>
+                    <strong>Tip:</strong> Our AI-powered system can extract ALL fields from your documents, not just predefined ones. For best results, ensure documents are clear, well-lit, and text is properly oriented.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .file-upload-area {
+        position: relative;
+        cursor: pointer;
+    }
+    
+    .file-upload-area input[type="file"] {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+    }
+    
+    .upload-content {
+        pointer-events: none;
+    }
+    
+    .file-upload-area.dragover {
+        border-color: #007bff !important;
+        background-color: #f8f9fa !important;
+    }
+    
+    .uploading-text {
+        display: none;
+    }
+    
+    .form-uploading .upload-text {
+        display: none;
+    }
+    
+    .form-uploading .uploading-text {
+        display: inline;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('uploadForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const fileInput = document.querySelector('input[type="file"]');
+    const fileUploadArea = document.getElementById('fileUploadArea');
+    const nameInput = document.querySelector('input[name="name"]');
+    
+    // File upload handling
+    fileInput.addEventListener('change', function() {
+        if (this.files.length > 0) {
+            const fileName = this.files[0].name;
+            const fileInfo = fileUploadArea.querySelector('.file-info');
+            fileInfo.innerHTML = `<i class="bi bi-file-earmark-text text-success"></i> Selected: <strong>${fileName}</strong>`;
+            
+            // Auto-fill name if empty
+            if (!nameInput.value) {
+                const nameWithoutExt = fileName.replace(/\.[^/.]+$/, "");
+                nameInput.value = nameWithoutExt;
+            }
+            
+            // Update upload area appearance
+            fileUploadArea.style.borderColor = '#28a745';
+            fileUploadArea.style.backgroundColor = '#f8fff8';
+        }
+    });
+    
+    // Form submission handling
+    form.addEventListener('submit', function(e) {
+        if (!fileInput.files.length) {
+            e.preventDefault();
+            alert('Please select a file to upload.');
+            return;
+        }
+        
+        // Show uploading state
+        form.classList.add('form-uploading');
+        submitBtn.disabled = true;
+        
+        // Show progress (you can enhance this with actual progress tracking)
+        setTimeout(function() {
+            if (form.classList.contains('form-uploading')) {
+                const uploadingText = submitBtn.querySelector('.uploading-text');
+                uploadingText.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
+            }
+        }, 2000);
+    });
+    
+    // File size validation
+    fileInput.addEventListener('change', function() {
+        const file = this.files[0];
+        if (file) {
+            const maxSize = 10 * 1024 * 1024; // 10MB
+            if (file.size > maxSize) {
+                alert('File size exceeds 10MB limit. Please choose a smaller file.');
+                this.value = '';
+                const fileInfo = fileUploadArea.querySelector('.file-info');
+                fileInfo.textContent = '';
+                fileUploadArea.style.borderColor = '#dee2e6';
+                fileUploadArea.style.backgroundColor = 'transparent';
+            }
+        }
+    });
+    
+    // Advanced drag and drop styling
+    let dragCounter = 0;
+    
+    fileUploadArea.addEventListener('dragenter', function(e) {
+        e.preventDefault();
+        dragCounter++;
+        this.classList.add('dragover');
+    });
+    
+    fileUploadArea.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        dragCounter--;
+        if (dragCounter === 0) {
+            this.classList.remove('dragover');
+        }
+    });
+    
+    fileUploadArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        dragCounter = 0;
+        this.classList.remove('dragover');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            fileInput.files = files;
+            const event = new Event('change', { bubbles: true });
+            fileInput.dispatchEvent(event);
+        }
+    });
+});
+</script>
+{% endblock %} 

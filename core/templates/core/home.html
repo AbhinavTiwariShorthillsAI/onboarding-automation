@@ -1,0 +1,268 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Dashboard - Onboarding Automation{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h2">
+                <i class="bi bi-speedometer2"></i>
+                Dashboard
+            </h1>
+            <a href="{% url 'upload_document' %}" class="btn btn-primary">
+                <i class="bi bi-cloud-upload"></i>
+                Upload Document
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card bg-primary text-white card-hover">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h5 class="card-title mb-0">Total Documents</h5>
+                        <h2 class="mb-0">{{ stats.total_documents }}</h2>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <i class="bi bi-file-earmark-text" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card bg-success text-white card-hover">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h5 class="card-title mb-0">Processed</h5>
+                        <h2 class="mb-0">{{ stats.processed_documents }}</h2>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <i class="bi bi-check-circle" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card bg-warning text-white card-hover">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h5 class="card-title mb-0">Pending</h5>
+                        <h2 class="mb-0">{{ stats.pending_documents }}</h2>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <i class="bi bi-clock" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card bg-danger text-white card-hover">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h5 class="card-title mb-0">Errors</h5>
+                        <h2 class="mb-0">{{ stats.error_documents }}</h2>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <i class="bi bi-exclamation-triangle" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="bi bi-lightning"></i>
+                    Quick Actions
+                </h5>
+                <div class="row">
+                    <div class="col-md-4 mb-2">
+                        <a href="{% url 'upload_document' %}" class="btn btn-outline-primary w-100">
+                            <i class="bi bi-cloud-upload"></i>
+                            Upload New Document
+                        </a>
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <a href="{% url 'document_list' %}" class="btn btn-outline-secondary w-100">
+                            <i class="bi bi-list"></i>
+                            View All Documents
+                        </a>
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <a href="{% url 'document_list' %}?status=error" class="btn btn-outline-danger w-100">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            Review Errors
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Documents -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-clock-history"></i>
+                    Recent Documents
+                </h5>
+                <a href="{% url 'document_list' %}" class="btn btn-sm btn-outline-primary">
+                    View All
+                </a>
+            </div>
+            <div class="card-body">
+                {% if recent_documents %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Document</th>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                    <th>Uploaded</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for document in recent_documents %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-file-earmark-text me-2 text-muted"></i>
+                                            <div>
+                                                <div class="fw-bold">{{ document.name }}</div>
+                                                {% if document.file_size %}
+                                                    <small class="text-muted">
+                                                        {{ document.file_size|filesizeformat }}
+                                                    </small>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ document.get_document_type_display }}</span>
+                                    </td>
+                                    <td>
+                                        {% if document.status == 'completed' %}
+                                            <span class="badge bg-success status-badge">
+                                                <i class="bi bi-check-circle"></i> Completed
+                                            </span>
+                                        {% elif document.status == 'processing' %}
+                                            <span class="badge bg-warning status-badge">
+                                                <i class="bi bi-gear-fill processing-spinner"></i> Processing
+                                            </span>
+                                        {% elif document.status == 'error' %}
+                                            <span class="badge bg-danger status-badge">
+                                                <i class="bi bi-exclamation-triangle"></i> Error
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-secondary status-badge">
+                                                <i class="bi bi-clock"></i> Uploaded
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">
+                                            {{ document.uploaded_at|timesince }} ago
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'document_detail' document.id %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i> View
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-file-earmark-text text-muted" style="font-size: 3rem;"></i>
+                        <h5 class="text-muted mt-3">No documents uploaded yet</h5>
+                        <p class="text-muted">Upload your first onboarding document to get started.</p>
+                        <a href="{% url 'upload_document' %}" class="btn btn-primary">
+                            <i class="bi bi-cloud-upload"></i>
+                            Upload Document
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- System Information -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="bi bi-info-circle"></i>
+                    System Information
+                </h6>
+                <ul class="list-unstyled mb-0">
+                    <li><strong>Supported Formats:</strong> PDF, JPG, PNG</li>
+                    <li><strong>Max File Size:</strong> 10 MB</li>
+                    <li><strong>OCR Engine:</strong> Google Gemini Pro</li>
+                    <li><strong>Processing:</strong> AI-powered</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="bi bi-list-check"></i>
+                    Extracted Fields
+                </h6>
+                <ul class="list-unstyled mb-0">
+                    <li>• Full Name</li>
+                    <li>• Date of Birth</li>
+                    <li>• Email & Phone</li>
+                    <li>• PAN & Aadhaar</li>
+                    <li>• Address & Bank Details</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-refresh stats every 30 seconds
+    setInterval(function() {
+        fetch('{% url "stats_api" %}')
+            .then(response => response.json())
+            .then(data => {
+                // Update stats if needed
+                console.log('Stats updated:', data);
+            })
+            .catch(error => console.error('Error updating stats:', error));
+    }, 30000);
+</script>
+{% endblock %} 

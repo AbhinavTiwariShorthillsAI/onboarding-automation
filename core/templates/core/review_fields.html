@@ -1,0 +1,474 @@
+{% extends 'core/base.html' %}
+{% load field_filters %}
+
+{% block title %}Review Fields - {{ document.name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h2">
+                    <i class="bi bi-pencil-square"></i>
+                    Review Extracted Fields
+                </h1>
+                <p class="text-muted mb-0">
+                    Document: <strong>{{ document.name }}</strong>
+                </p>
+            </div>
+            <div>
+                <a href="{% url 'document_detail' document.id %}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i>
+                    Back to Document
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form method="post" id="reviewForm">
+    {% csrf_token %}
+    
+    <div class="row">
+        <!-- Form Fields -->
+        <div class="col-lg-8">
+            <!-- Personal Information -->
+            <div class="field-group">
+                <h5>
+                    <i class="bi bi-person"></i>
+                    Personal Information
+                </h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.full_name.id_for_label }}" class="form-label">Full Name</label>
+                        {{ form.full_name }}
+                        {% if form.full_name.errors %}
+                            <div class="text-danger">
+                                {% for error in form.full_name.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.date_of_birth.id_for_label }}" class="form-label">Date of Birth</label>
+                        {{ form.date_of_birth }}
+                        {% if form.date_of_birth.help_text %}
+                            <div class="form-text">{{ form.date_of_birth.help_text }}</div>
+                        {% endif %}
+                        {% if form.date_of_birth.errors %}
+                            <div class="text-danger">
+                                {% for error in form.date_of_birth.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.email.id_for_label }}" class="form-label">Email Address</label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                            <div class="text-danger">
+                                {% for error in form.email.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.phone_number.id_for_label }}" class="form-label">Phone Number</label>
+                        {{ form.phone_number }}
+                        {% if form.phone_number.help_text %}
+                            <div class="form-text">{{ form.phone_number.help_text }}</div>
+                        {% endif %}
+                        {% if form.phone_number.errors %}
+                            <div class="text-danger">
+                                {% for error in form.phone_number.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Government IDs -->
+            <div class="field-group">
+                <h5>
+                    <i class="bi bi-card-text"></i>
+                    Government IDs
+                </h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.pan_number.id_for_label }}" class="form-label">PAN Number</label>
+                        {{ form.pan_number }}
+                        {% if form.pan_number.help_text %}
+                            <div class="form-text">{{ form.pan_number.help_text }}</div>
+                        {% endif %}
+                        {% if form.pan_number.errors %}
+                            <div class="text-danger">
+                                {% for error in form.pan_number.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.aadhaar_number.id_for_label }}" class="form-label">Aadhaar Number</label>
+                        {{ form.aadhaar_number }}
+                        {% if form.aadhaar_number.help_text %}
+                            <div class="form-text">{{ form.aadhaar_number.help_text }}</div>
+                        {% endif %}
+                        {% if form.aadhaar_number.errors %}
+                            <div class="text-danger">
+                                {% for error in form.aadhaar_number.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Address Information -->
+            <div class="field-group">
+                <h5>
+                    <i class="bi bi-geo-alt"></i>
+                    Address Information
+                </h5>
+                <div class="row">
+                    <div class="col-12 mb-3">
+                        <label for="{{ form.address_line_1.id_for_label }}" class="form-label">Address Line 1</label>
+                        {{ form.address_line_1 }}
+                        {% if form.address_line_1.errors %}
+                            <div class="text-danger">
+                                {% for error in form.address_line_1.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-12 mb-3">
+                        <label for="{{ form.address_line_2.id_for_label }}" class="form-label">Address Line 2</label>
+                        {{ form.address_line_2 }}
+                        {% if form.address_line_2.errors %}
+                            <div class="text-danger">
+                                {% for error in form.address_line_2.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="{{ form.city.id_for_label }}" class="form-label">City</label>
+                        {{ form.city }}
+                        {% if form.city.errors %}
+                            <div class="text-danger">
+                                {% for error in form.city.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="{{ form.state.id_for_label }}" class="form-label">State</label>
+                        {{ form.state }}
+                        {% if form.state.errors %}
+                            <div class="text-danger">
+                                {% for error in form.state.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="{{ form.pincode.id_for_label }}" class="form-label">Pincode</label>
+                        {{ form.pincode }}
+                        {% if form.pincode.errors %}
+                            <div class="text-danger">
+                                {% for error in form.pincode.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bank Details -->
+            <div class="field-group">
+                <h5>
+                    <i class="bi bi-bank"></i>
+                    Bank Details
+                </h5>
+                <div class="row">
+                    <div class="col-12 mb-3">
+                        <label for="{{ form.bank_name.id_for_label }}" class="form-label">Bank Name</label>
+                        {{ form.bank_name }}
+                        {% if form.bank_name.errors %}
+                            <div class="text-danger">
+                                {% for error in form.bank_name.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.account_number.id_for_label }}" class="form-label">Account Number</label>
+                        {{ form.account_number }}
+                        {% if form.account_number.errors %}
+                            <div class="text-danger">
+                                {% for error in form.account_number.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.ifsc_code.id_for_label }}" class="form-label">IFSC Code</label>
+                        {{ form.ifsc_code }}
+                        {% if form.ifsc_code.help_text %}
+                            <div class="form-text">{{ form.ifsc_code.help_text }}</div>
+                        {% endif %}
+                        {% if form.ifsc_code.errors %}
+                            <div class="text-danger">
+                                {% for error in form.ifsc_code.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="d-flex justify-content-between">
+                <a href="{% url 'document_detail' document.id %}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i>
+                    Cancel
+                </a>
+                <button type="submit" class="btn btn-success btn-lg">
+                    <i class="bi bi-check-circle"></i>
+                    Save & Verify Fields
+                </button>
+            </div>
+            
+            <!-- Additional Dynamic Fields -->
+            {% if extracted_fields.get_additional_fields %}
+            <div class="field-group mt-4">
+                <h5>
+                    <i class="bi bi-plus-circle"></i>
+                    Additional Extracted Fields
+                    <small class="text-muted">({{ extracted_fields.get_additional_fields|safe_length }} fields found)</small>
+                </h5>
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    These additional fields were automatically extracted from your document. 
+                    You can review and edit them as needed.
+                </div>
+                
+                <div class="row">
+                    {% for field_name, field_value in extracted_fields.get_additional_fields.items %}
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-capitalize">
+                                {{ field_name|format_field_name }}
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   value="{{ field_value }}" 
+                                   name="additional_{{ field_name }}"
+                                   placeholder="Enter {{ field_name|replace_underscore }}">
+                            <small class="text-muted">
+                                Automatically extracted field
+                            </small>
+                        </div>
+                    {% endfor %}
+                </div>
+                
+                <div class="alert alert-warning mt-3">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <strong>Note:</strong> Additional fields are for reference and review. 
+                    The main structured fields above are used for system integration.
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Document Preview -->
+            <div class="card sticky-top" style="top: 1rem;">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="bi bi-file-earmark-text"></i>
+                        Document Information
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Name:</dt>
+                        <dd class="col-sm-8">{{ document.name }}</dd>
+                        
+                        <dt class="col-sm-4">Type:</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge bg-info">{{ document.get_document_type_display }}</span>
+                        </dd>
+                        
+                        <dt class="col-sm-4">Status:</dt>
+                        <dd class="col-sm-8">
+                            {% if document.status == 'completed' %}
+                                <span class="badge bg-success">
+                                    <i class="bi bi-check-circle"></i> Completed
+                                </span>
+                            {% elif document.status == 'processing' %}
+                                <span class="badge bg-warning">
+                                    <i class="bi bi-gear-fill"></i> Processing
+                                </span>
+                            {% elif document.status == 'error' %}
+                                <span class="badge bg-danger">
+                                    <i class="bi bi-exclamation-triangle"></i> Error
+                                </span>
+                            {% else %}
+                                <span class="badge bg-secondary">
+                                    <i class="bi bi-clock"></i> Uploaded
+                                </span>
+                            {% endif %}
+                        </dd>
+                        
+                        <dt class="col-sm-4">Size:</dt>
+                        <dd class="col-sm-8">{{ document.file_size|filesizeformat }}</dd>
+                        
+                        <dt class="col-sm-4">Uploaded:</dt>
+                        <dd class="col-sm-8">{{ document.uploaded_at|date:"M d, Y H:i" }}</dd>
+                    </dl>
+                    
+                    <hr>
+                    
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'download_original' document.id %}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-download"></i>
+                            Download Original
+                        </a>
+                        {% if extracted_fields %}
+                            <a href="{% url 'export_fields' document.id %}" class="btn btn-outline-success btn-sm">
+                                <i class="bi bi-file-earmark-arrow-down"></i>
+                                Export JSON
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Tips -->
+            <div class="card mt-3">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="bi bi-lightbulb"></i>
+                        Review Tips
+                    </h6>
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2">
+                            <i class="bi bi-check text-success"></i>
+                            Review all extracted fields carefully
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-pencil text-info"></i>
+                            Edit any incorrect values
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-shield-check text-warning"></i>
+                            Verify PAN and Aadhaar formats
+                        </li>
+                        <li class="mb-0">
+                            <i class="bi bi-save text-primary"></i>
+                            Save to mark as verified
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('reviewForm');
+    
+    // Auto-save functionality (optional)
+    let autoSaveTimeout;
+    const inputs = form.querySelectorAll('input, textarea, select');
+    
+    inputs.forEach(input => {
+        input.addEventListener('input', function() {
+            clearTimeout(autoSaveTimeout);
+            autoSaveTimeout = setTimeout(function() {
+                // Could implement auto-save here
+                console.log('Field updated:', input.name, input.value);
+            }, 1000);
+        });
+    });
+    
+    // Form validation
+    form.addEventListener('submit', function(e) {
+        const panField = form.querySelector('input[name="pan_number"]');
+        const aadhaarField = form.querySelector('input[name="aadhaar_number"]');
+        
+        // Validate PAN format if provided
+        if (panField && panField.value) {
+            const panPattern = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+            if (!panPattern.test(panField.value.toUpperCase())) {
+                e.preventDefault();
+                alert('Please enter a valid PAN number format (e.g., ABCDE1234F)');
+                panField.focus();
+                return;
+            }
+        }
+        
+        // Validate Aadhaar format if provided
+        if (aadhaarField && aadhaarField.value) {
+            const cleanAadhaar = aadhaarField.value.replace(/\D/g, '');
+            if (cleanAadhaar.length !== 12) {
+                e.preventDefault();
+                alert('Please enter a valid 12-digit Aadhaar number');
+                aadhaarField.focus();
+                return;
+            }
+        }
+    });
+    
+    // Auto-format fields
+    const panInput = form.querySelector('input[name="pan_number"]');
+    if (panInput) {
+        panInput.addEventListener('input', function() {
+            this.value = this.value.toUpperCase();
+        });
+    }
+    
+    const phoneInput = form.querySelector('input[name="phone_number"]');
+    if (phoneInput) {
+        phoneInput.addEventListener('input', function() {
+            // Remove non-digits
+            this.value = this.value.replace(/\D/g, '');
+            // Limit to 10 digits
+            if (this.value.length > 10) {
+                this.value = this.value.slice(0, 10);
+            }
+        });
+    }
+    
+    const pincodeInput = form.querySelector('input[name="pincode"]');
+    if (pincodeInput) {
+        pincodeInput.addEventListener('input', function() {
+            // Remove non-digits
+            this.value = this.value.replace(/\D/g, '');
+            // Limit to 6 digits
+            if (this.value.length > 6) {
+                this.value = this.value.slice(0, 6);
+            }
+        });
+    }
+});
+</script>
+{% endblock %} 

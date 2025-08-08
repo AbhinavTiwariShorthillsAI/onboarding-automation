@@ -1,0 +1,252 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Google Gemini Info - Onboarding Automation{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h2">
+                <i class="bi bi-robot"></i>
+                Google Gemini Pro Status
+            </h1>
+            <a href="{% url 'home' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i>
+                Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Configuration Status -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-gear"></i>
+                    Configuration Status
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-6">API Status:</dt>
+                            <dd class="col-sm-6">
+                                {% if is_configured %}
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-check-circle"></i> Configured
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-danger">
+                                        <i class="bi bi-x-circle"></i> Not Configured
+                                    </span>
+                                {% endif %}
+                            </dd>
+                            
+                            <dt class="col-sm-6">API Key:</dt>
+                            <dd class="col-sm-6">
+                                {% if api_key_configured %}
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-shield-check"></i> Set
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-warning">
+                                        <i class="bi bi-exclamation-triangle"></i> Missing
+                                    </span>
+                                {% endif %}
+                            </dd>
+                            
+                            <dt class="col-sm-6">Model:</dt>
+                            <dd class="col-sm-6">
+                                <code>{{ usage_info.model }}</code>
+                            </dd>
+                        </dl>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-primary">Quick Setup</h6>
+                        <ol class="list-group list-group-numbered">
+                            <li class="list-group-item">
+                                Get API key from 
+                                <a href="https://makersuite.google.com/app/apikey" target="_blank" class="text-decoration-none">
+                                    Google AI Studio <i class="bi bi-box-arrow-up-right"></i>
+                                </a>
+                            </li>
+                            <li class="list-group-item">
+                                Set <code>GOOGLE_AI_API_KEY</code> in <code>.env</code> file
+                            </li>
+                            <li class="list-group-item">
+                                Restart Django server
+                            </li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Usage Information -->
+<div class="row mb-4">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-graph-up"></i>
+                    API Usage & Limits
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    <strong>Note:</strong> {{ usage_info.note }}
+                </div>
+                
+                <h6 class="text-primary">Current Model: {{ usage_info.model }}</h6>
+                <p class="mb-3">
+                    {% if usage_info.model == "gemini-1.5-flash" %}
+                        {{ usage_info.pricing_info.gemini-1.5-flash }}
+                    {% elif usage_info.model == "gemini-1.5-pro" %}
+                        {{ usage_info.pricing_info.gemini-1.5-pro }}
+                    {% elif usage_info.model == "gemini-2.0-flash-exp" %}
+                        {{ usage_info.pricing_info.gemini-2.0-flash-exp }}
+                    {% else %}
+                        Pro subscription with enhanced capabilities
+                    {% endif %}
+                </p>
+                
+                <!-- Enhanced Features for Gemini 2.0 -->
+                {% if usage_info.features %}
+                    <h6 class="text-success">Enhanced Features</h6>
+                    <ul class="list-unstyled">
+                        {% for feature in usage_info.features %}
+                            <li class="mb-1">
+                                <i class="bi bi-check-circle text-success"></i>
+                                {{ feature }}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                
+                <h6 class="text-primary">Rate Limits</h6>
+                <ul class="list-unstyled">
+                    {% for model, limit in usage_info.pricing_info.items %}
+                        <li class="mb-2">
+                            <strong>{{ model }}:</strong> {{ limit }}
+                        </li>
+                    {% endfor %}
+                </ul>
+                
+                <p class="text-muted mt-3">
+                    <i class="bi bi-link-45deg"></i>
+                    For current pricing and limits, visit: 
+                    <a href="https://ai.google.dev/pricing" target="_blank" class="text-decoration-none">
+                        {{ usage_info.api_limits }} <i class="bi bi-box-arrow-up-right"></i>
+                    </a>
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-calendar-week"></i>
+                    Processing Stats
+                </h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-7">Today:</dt>
+                    <dd class="col-5">
+                        <span class="badge bg-primary">{{ today_documents }}</span>
+                    </dd>
+                    
+                    <dt class="col-7">Yesterday:</dt>
+                    <dd class="col-5">
+                        <span class="badge bg-secondary">{{ yesterday_documents }}</span>
+                    </dd>
+                </dl>
+                
+                <hr>
+                
+                <h6 class="text-warning">Recent Errors (24h)</h6>
+                {% if recent_errors %}
+                    <div class="list-group list-group-flush">
+                        {% for error in recent_errors %}
+                            <div class="list-group-item p-2">
+                                <small class="text-muted">{{ error.created_at|date:"M d H:i" }}</small><br>
+                                <small>{{ error.message|truncatechars:50 }}</small>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted mb-0">
+                        <i class="bi bi-check-circle text-success"></i>
+                        No errors in the last 24 hours
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Best Practices -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="bi bi-lightbulb text-warning"></i>
+                    Best Practices
+                </h6>
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <i class="bi bi-check text-success"></i>
+                        Use clear, well-lit document scans
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-check text-success"></i>
+                        Ensure text is not rotated or skewed
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-check text-success"></i>
+                        Monitor API quota usage
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-check text-success"></i>
+                        Use gemini-1.5-flash for cost efficiency
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="bi bi-exclamation-triangle text-warning"></i>
+                    Troubleshooting
+                </h6>
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <strong>Quota Exceeded:</strong> Wait or upgrade plan
+                    </li>
+                    <li class="mb-2">
+                        <strong>Auth Error:</strong> Check API key in .env
+                    </li>
+                    <li class="mb-2">
+                        <strong>No Text Extracted:</strong> Verify image quality
+                    </li>
+                    <li class="mb-2">
+                        <strong>Rate Limited:</strong> Reduce processing frequency
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
