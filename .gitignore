@@ -205,3 +205,19 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Project-specific (Django)
+media/
+staticfiles/
+static_root/
+
+# Editors
+.idea/
+.vscode/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Frontend deps (if any)
+node_modules/
