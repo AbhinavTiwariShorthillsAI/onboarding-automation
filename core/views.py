@@ -16,6 +16,7 @@ import re
 
 from .models import UploadedDocument, ExtractedFields, ProcessingLog
 from .forms import DocumentUploadForm, ExtractedFieldsForm
+from .forms import MultiDocumentUploadForm
 from .ocr_utils import extract_text_from_file, detect_file_type
 from .parser_utils import FieldExtractor
 
@@ -48,50 +49,92 @@ def upload_document(request):
     Handle document upload and initiate processing
     """
     if request.method == 'POST':
+        # If multiple files are posted, prefer the multi form path
+        if request.FILES.getlist('files'):
+            multi_form = MultiDocumentUploadForm(request.POST, request.FILES)
+            if multi_form.is_valid():
+                created_docs = []
+                files = request.FILES.getlist('files')
+                doc_type = multi_form.cleaned_data['document_type']
+                name_prefix = multi_form.cleaned_data.get('name_prefix') or ''
+                for f in files:
+                    try:
+                        document = UploadedDocument(
+                            document_type=doc_type,
+                            file=f,
+                        )
+                        # Determine name
+                        base_name = f.name.rsplit('.', 1)[0]
+                        document.name = f"{name_prefix}{base_name}" if name_prefix else base_name
+                        document.file_size = f.size
+                        # Delay mime_type detection until file is saved to disk
+                        document.save()
+                        document.mime_type = detect_file_type(document.file.path)
+                        document.save(update_fields=['mime_type'])
+
+                        ProcessingLog.objects.create(
+                            document=document,
+                            level='info',
+                            message=f'Document uploaded successfully: {document.name}',
+                            step='upload'
+                        )
+                        created_docs.append(document)
+                    except Exception as e:
+                        logger.error(f"Error saving uploaded file {f.name}: {e}")
+                        messages.error(request, f"Failed to save {f.name}: {e}")
+
+                # Process each created document
+                for d in created_docs:
+                    try:
+                        process_document(d.id)
+                    except Exception as e:
+                        logger.error(f"Error processing document {d.id}: {e}")
+                        messages.warning(request, f'Uploaded {d.name} but processing failed. You can retry later.')
+
+                if len(created_docs) == 1:
+                    messages.success(request, f'Uploaded and queued 1 document.')
+                    return redirect('document_detail', document_id=created_docs[0].id)
+                elif len(created_docs) > 1:
+                    messages.success(request, f'Uploaded and queued {len(created_docs)} documents.')
+                    return redirect('document_list')
+        
+        # Fallback to single-file form
         form = DocumentUploadForm(request.POST, request.FILES)
         if form.is_valid():
             try:
-                # Save the document
                 document = form.save(commit=False)
-                
-                # Set additional metadata
                 if document.file:
                     document.file_size = document.file.size
-                    document.mime_type = detect_file_type(document.file.path)
-                
-                # Auto-generate name if not provided
+                document.save()
+                document.mime_type = detect_file_type(document.file.path)
+                # Auto name
                 if not document.name:
                     document.name = document.file.name.rsplit('.', 1)[0]
-                
                 document.save()
-                
-                # Log the upload
+
                 ProcessingLog.objects.create(
                     document=document,
                     level='info',
                     message=f'Document uploaded successfully: {document.name}',
                     step='upload'
                 )
-                
+
                 messages.success(request, f'Document "{document.name}" uploaded successfully!')
-                
-                # Start processing in the background (for now, process immediately)
                 try:
                     process_document(document.id)
                     return redirect('document_detail', document_id=document.id)
                 except Exception as e:
                     logger.error(f"Error processing document {document.id}: {e}")
-                    messages.warning(request, 
-                        'Document uploaded but processing failed. You can retry processing from the document page.')
+                    messages.warning(request, 'Document uploaded but processing failed. You can retry later.')
                     return redirect('document_detail', document_id=document.id)
-                
             except Exception as e:
                 logger.error(f"Error uploading document: {e}")
                 messages.error(request, f'Error uploading document: {str(e)}')
     else:
         form = DocumentUploadForm()
-    
-    return render(request, 'core/upload_form.html', {'form': form})
+        multi_form = MultiDocumentUploadForm()
+
+    return render(request, 'core/upload_form.html', {'form': form, 'multi_form': multi_form})
 
 
 def document_list(request):
