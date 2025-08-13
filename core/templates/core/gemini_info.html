@@ -1,4 +1,5 @@
 {% extends 'core/base.html' %}
+{% load field_filters %}
 
 {% block title %}Google Gemini Info - Onboarding Automation{% endblock %}
 
@@ -106,11 +107,11 @@
                 <h6 class="text-primary">Current Model: {{ usage_info.model }}</h6>
                 <p class="mb-3">
                     {% if usage_info.model == "gemini-1.5-flash" %}
-                        {{ usage_info.pricing_info.gemini-1.5-flash }}
+                        {{ usage_info.pricing_info|dict_get:"gemini-1.5-flash" }}
                     {% elif usage_info.model == "gemini-1.5-pro" %}
-                        {{ usage_info.pricing_info.gemini-1.5-pro }}
+                        {{ usage_info.pricing_info|dict_get:"gemini-1.5-pro" }}
                     {% elif usage_info.model == "gemini-2.0-flash-exp" %}
-                        {{ usage_info.pricing_info.gemini-2.0-flash-exp }}
+                        {{ usage_info.pricing_info|dict_get:"gemini-2.0-flash-exp" }}
                     {% else %}
                         Pro subscription with enhanced capabilities
                     {% endif %}

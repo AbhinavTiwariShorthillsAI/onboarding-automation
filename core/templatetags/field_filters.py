@@ -23,3 +23,13 @@ def safe_length(value):
         return len(value)
     except (TypeError, AttributeError):
         return 0 
+
+@register.filter
+def dict_get(mapping, key):
+    """Safely get a dictionary value by key in templates."""
+    try:
+        if mapping is None:
+            return None
+        return mapping.get(key)
+    except AttributeError:
+        return None 
